@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Gas Turbine Monitor</title>
+    <meta name="description" content="AI Gas Turbine Monitor for Predictive Maintenance and Fault Diagnostics.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;800&family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="grid-overlay"></div>
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+
+    <div class="app-container">
+        <header class="app-header">
+            <div class="logo">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="url(#cyan-glow)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <defs>
+                        <linearGradient id="cyan-glow" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#00f2fe" />
+                            <stop offset="100%" stop-color="#4facfe" />
+                        </linearGradient>
+                    </defs>
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="14.31" y1="8" x2="20.05" y2="17.94"></line>
+                    <line x1="9.69" y1="8" x2="21.17" y2="8"></line>
+                    <line x1="7.38" y1="12" x2="13.12" y2="2.06"></line>
+                    <line x1="9.69" y1="16" x2="3.95" y2="6.06"></line>
+                    <line x1="14.31" y1="16" x2="2.83" y2="16"></line>
+                    <line x1="16.62" y1="12" x2="10.88" y2="21.94"></line>
+                </svg>
+                <h1>Turbine<span>Sense</span> AI</h1>
+            </div>
+            <div class="header-status">
+                <span class="status-dot"></span> System Online
+            </div>
+        </header>
+
+        <main class="dashboard">
+            <section class="panel input-panel">
+                <div class="panel-header">
+                    <h2>Live Telemetry Feed</h2>
+                    <span class="badge">Awaiting Data</span>
+                </div>
+                <form action="/predict" method="POST" id="predict-form" class="telemetry-grid">
+                    {% for key, label in features.items() %}
+                    <div class="input-group">
+                        <label for="{{ key }}">{{ label }}</label>
+                        <div class="input-wrapper">
+                            <input type="number" step="any" name="{{ key }}" id="{{ key }}" required 
+                                value="{% if input_data %}{{ input_data[key] }}{% endif %}" placeholder="0.00">
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    <button type="submit" class="cyber-btn">
+                        <span class="btn-text">INITIALIZE DIAGNOSTICS</span>
+                        <div class="btn-scanner"></div>
+                    </button>
+                </form>
+            </section>
+
+            <section class="panel results-panel">
+                <div class="panel-header">
+                    <h2>Diagnostics Engine</h2>
+                    <span class="badge">Model: Random Forest</span>
+                </div>
+
+                {% if prediction %}
+                <div class="result-display static-display popup-card {% if prediction == 'FAIL' %}state-critical{% elif prediction == 'PASS' %}state-nominal{% endif %}" style="box-shadow:none; padding:1rem; border:none; animation:none; min-width:auto; margin: auto;">
+                    <div class="status-ring" style="width:100px; height:100px; margin-bottom:1rem;">
+                        {% if prediction == 'FAIL' %}
+                        <svg class="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:40px; height:40px;">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                        {% else %}
+                        <svg class="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:40px; height:40px;">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                        {% endif %}
+                        <div class="ring-pulse"></div>
+                    </div>
+                    
+                    <div class="status-content">
+                        <div class="status-label">Overall Integrity</div>
+                        <h1 class="status-value" style="font-size:3.5rem;">{{ prediction }}</h1>
+                        <p class="status-message" style="font-size:0.9rem;">
+                            {% if prediction == 'FAIL' %}CRITICAL ANOMALY DETECTED.{% else %}ALL SYSTEMS OPERATIONAL.{% endif %}
+                        </p>
+                    </div>
+                </div>
+                {% elif error_msg %}
+                <div class="error-box">
+                    <p>⚠️ Error: {{ error_msg }}</p>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1.5">
+                        <line x1="18" y1="20" x2="18" y2="10"/>
+                        <line x1="12" y1="20" x2="12" y2="4"/>
+                        <line x1="6" y1="20" x2="6" y2="14"/>
+                    </svg>
+                    <p class="mono-text">WAITING_FOR_TELEMETRY</p>
+                </div>
+                {% endif %}
+
+                <!-- POPUP OVERLAY -->
+                {% if error_msg or prediction %}
+                <div class="popup-overlay" id="result-popup">
+                    <div class="popup-card {% if prediction == 'FAIL' %}state-critical{% elif prediction == 'PASS' %}state-nominal{% endif %}">
+                        <button type="button" class="close-btn" onclick="document.getElementById('result-popup').style.display='none'">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
+                        
+                        {% if error_msg %}
+                        <div class="error-box" style="margin-top: 1rem;">
+                            <p>⚠️ Error: {{ error_msg }}</p>
+                        </div>
+                        {% endif %}
+
+                        {% if prediction %}
+                        <div class="result-display">
+                            <div class="status-ring">
+                                {% if prediction == 'FAIL' %}
+                                <svg class="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                    <line x1="12" y1="9" x2="12" y2="13"/>
+                                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                                </svg>
+                                {% else %}
+                                <svg class="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                    <polyline points="22 4 12 14.01 9 11.01"/>
+                                </svg>
+                                {% endif %}
+                                <div class="ring-pulse"></div>
+                            </div>
+                            
+                            <div class="status-content">
+                                <div class="status-label">Overall Integrity</div>
+                                <h1 class="status-value">{{ prediction }}</h1>
+                                <p class="status-message">
+                                    {% if prediction == 'FAIL' %}
+                                        CRITICAL ANOMALY DETECTED. IMMEDIATE MAINTENANCE REQUIRED.
+                                    {% else %}
+                                        ALL SYSTEMS OPERATIONAL. NO ANOMALIES DETECTED.
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <button type="button" class="cyber-btn" style="width:100%; margin-top:2rem;" onclick="document.getElementById('result-popup').style.display='none'">
+                            <span class="btn-text">ACKNOWLEDGE SYSTEM STATE</span>
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+            </section>
+        </main>
+    </div>
+
+    <script>
+        document.getElementById('predict-form').addEventListener('submit', function() {
+            const btn = this.querySelector('.cyber-btn');
+            btn.classList.add('loading');
+            btn.querySelector('.btn-text').textContent = "PROCESSING...";
+        });
+    </script>
+</body>
+</html>

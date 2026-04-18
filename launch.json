@@ -1,0 +1,26 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "1. Start Flask Server",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/app.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "2. Launch Chrome",
+            "type": "chrome",
+            "request": "launch",
+            "url": "http://127.0.0.1:8080",
+            "webRoot": "${workspaceFolder}"
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Run Flask & Chrome",
+            "configurations": ["1. Start Flask Server", "2. Launch Chrome"]
+        }
+    ]
+}
